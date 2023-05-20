@@ -4,6 +4,7 @@ class Emulator:
 
     def __init__(self):
         self.memory = Memory()
+        
 
     def get_nibble(self, byte, pos):
         return byte[pos + 1]
@@ -18,7 +19,7 @@ class Emulator:
 
 
     def decode_instr(self, byte1, byte2):
-        match get_nibble(byte1, 1):
+        match self.get_nibble(byte1, 1):
             case '0':
                 CLS(byte1, byte2)
             case '1':
@@ -32,13 +33,13 @@ class Emulator:
             case '5':
                 self.SE_REG(byte1, byte2)
             case '6':
-                LD_BYTE(byte1, byte2) 
+                self.LD_BYTE(byte1, byte2) 
             case '7':
-                ADD_BYTE(byte1, byte2)
+                self.ADD_BYTE(byte1, byte2)
             case '8': 
-                match get_nibble(byte2, 2):
+                match self.get_nibble(byte2, 2):
                     case '0':
-                        LD_REG(byte1, byte2)
+                        self.LD_REG(byte1, byte2)
                     case '1':
                         OR(byte1, byte2)
                     case '2':
@@ -66,13 +67,13 @@ class Emulator:
             case 'D':
                 DRW(byte1, byte2)
             case 'E':
-                match get_nibble(byte2, 1):
+                match self.get_nibble(byte2, 1):
                     case '9':
                         SKP(byte1, byte2)
                     case 'A':
                         SKNP(byte1, byte2)
             case 'F':
-                match get_nibble(byte2, 1):
+                match self.get_nibble(byte2, 1):
                     case '1':
                         match get_nibble(byte2, 2):
                             case '5':
@@ -89,6 +90,7 @@ class Emulator:
                         LD_MEM_LOC(byte1, byte2)
                     case '6':
                         LD_READ_LOC(byte1, byte2)
+
 
     def CLS(self, byte1, byte2):
 
@@ -154,14 +156,135 @@ class Emulator:
             self.memory.increment_pc()
 
 
-    def LD_BYTE(self, byte1, byte2): 
+    def LD_BYTE(self, byte1, byte2):
+        '''
+        Set Vx = kk.
+
+        The interpreter puts the value kk into register Vx.
+        '''
+        second_nibble = int('0x0' + self.get_nibble(byte1, 2), 16)
+        self.memory.registers[second_nibble] = byte2
+
+
     def ADD_BYTE(self, byte1, byte2):
+        '''
+        Set Vx = Vx + kk.
+
+        Adds the value kk to the value of register Vx, then stores the result in Vx. 
+        '''
+        second_nibble = int('0x0' + self.get_nibble(byte1, 2), 16)
+        self.memory.registers[second_nibble] = hex(second_nibble + int(byte2, 16))
+
+
     def LD_REG(self, byte1, byte2):
+        '''
+        Set Vx = Vy.
+
+        Stores the value of register Vy in register Vx.
+        '''
+        second_nibble = int('0x0' + self.get_nibble(byte1, 2), 16)
+        third_nibble = int('0x0' + self.get_nibble(byte2, 1), 16)
+
+        self.memory.registers[second_nibble] = self.memory.registers[third_nibble]
+
+
     def OR(self, byte1, byte2):
+        '''
+        Set Vx = Vx OR Vy.
+
+        Performs a bitwise OR on the values of Vx and Vy, then stores the result in Vx. 
+        '''
+        second_nibble = int('0x0' + self.get_nibble(byte1, 2), 16)
+        third_nibble = int('0x0' + self.get_nibble(byte2, 1), 16)
+
+        reg1_val = int(self.memory.registers[second_nibble], 16)
+        reg2_val = int(self.memory.registers[third_nibble], 16)
+
+        self.memory.registers[second_nibble] = hex(reg1_val | reg2_val)
+
+
     def AND(self, byte1, byte2):
+        '''
+        Set Vx = Vx AND Vy.
+
+        Performs a bitwise AND on the values of Vx and Vy, then stores the result in Vx.      
+        '''
+        second_nibble = int('0x0' + self.get_nibble(byte1, 2), 16)
+        third_nibble = int('0x0' + self.get_nibble(byte2, 1), 16)
+
+        reg1_val = int(self.memory.registers[second_nibble], 16)
+        reg2_val = int(self.memory.registers[third_nibble], 16)
+
+        self.memory.registers[second_nibble] = hex(reg1_val & reg2_val)
+
+
     def XOR(self, byte1, byte2):
+        '''
+        Set Vx = Vx XOR Vy.
+
+        Performs a bitwise exclusive OR on the values of Vx and Vy, then stores the result in Vx.
+        '''
+        second_nibble = int('0x0' + self.get_nibble(byte1, 2), 16)
+        third_nibble = int('0x0' + self.get_nibble(byte2, 1), 16)
+
+        reg1_val = int(self.memory.registers[second_nibble], 16)
+        reg2_val = int(self.memory.registers[third_nibble], 16)
+
+        self.memory.registers[second_nibble] = hex(reg1_val ^ reg2_val)
+
+
     def ADD_REG(self, byte1, byte2):
+        '''
+        Set Vx = Vx + Vy, set VF = carry.
+
+        The values of Vx and Vy are added together. 
+        If the result is greater than 8 bits (i.e., > 255,) VF is set to 1, otherwise 0. 
+        Only the lowest 8 bits of the result are kept, and stored in Vx.
+        '''
+        second_nibble = int('0x0' + self.get_nibble(byte1, 2), 16)
+        third_nibble = int('0x0' + self.get_nibble(byte2, 1), 16)
+
+        reg1_val = int(self.memory.registers[second_nibble], 16)
+        reg2_val = int(self.memory.registers[third_nibble], 16)
+
+        if ((reg1_val + reg2_val) <= 255):
+            self.memory.registers[second_nibble] = hex(reg1_val + reg2_val)
+            self.memory.registers[15] = '0x00'
+        else:
+            self.memory.registers[15] = '0x01'
+            op_res = bin(reg1_val + reg2_val)
+            setval = '0b'
+            
+            op_res_len = len(op_res)
+
+            for i in range(8):
+                setval += op_res[((op_res_len - 1) - 8) + i]
+
+            setval = hex(int(setval, 2))
+            self.memory.registers[second_nibble] = setval
+
+
     def SUB(self, byte1, byte2):
+        '''
+        Set Vx = Vx - Vy, set VF = NOT borrow.
+
+        If Vx > Vy, then VF is set to 1, otherwise 0. Then Vy is subtracted from Vx, and the results stored in Vx.
+        '''
+        second_nibble = int('0x0' + self.get_nibble(byte1, 2), 16)
+        third_nibble = int('0x0' + self.get_nibble(byte2, 1), 16)
+
+        reg1_val = int(self.memory.registers[second_nibble], 16)
+        reg2_val = int(self.memory.registers[third_nibble], 16)
+
+        if (reg1_val > reg2_val):
+            self.memory.registers[15] = '0x01'
+            self.memory.registers[second_nibble] = hex(reg1_val - reg2_val)
+        else:
+            self.memory.registers[15] = '0x00'
+            self.memory.registers[second_nibble] = hex(reg1_val - reg2_val)
+        
+
+    # TODO: Implement
     def SHR(self, byte1, byte2):
     def SUBN(self, byte1, byte2):
     def SHL(self, byte1, byte2):

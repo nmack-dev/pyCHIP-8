@@ -6,7 +6,7 @@ class Memory:
         
         self.program_counter = 0
         
-        self.registers ['0x00'] * 16
+        self.registers = ['0x00'] * 16
 
         self.index_reg = '0x0000'
         
