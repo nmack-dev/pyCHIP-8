@@ -125,7 +125,7 @@ class Emulator:
         '''
         second_nibble = int('0x0' + self.get_nibble(byte1, 2), 16)
         
-        if (second_nibble == int(byte2, 16)):
+        if (self.memory.registers[second_nibble] == self.memory.registers[int(byte2, 16)]):
             self.memory.increment_pc()
 
 
@@ -137,7 +137,7 @@ class Emulator:
         '''
         second_nibble = int('0x0' + self.get_nibble(byte1, 2), 16)
         
-        if (second_nibble != int(byte2, 16)):
+        if (self.memory.registers[second_nibble] == self.memory.registers[int(byte2, 16)]):
             self.memory.increment_pc()
 
 
@@ -150,7 +150,7 @@ class Emulator:
         second_nibble = int('0x0' + self.get_nibble(byte1, 2), 16)
         third_nibble = int('0x0' + self.get_nibble(byte2, 1), 16)
 
-        if (second_nibble == third_nibble):
+        if (self.memory.registers[second_nibble] == self.memory.registers[third_nibble]):
             self.memory.increment_pc()
 
 
