@@ -112,8 +112,8 @@ class Emulator:
         The interpreter increments the stack pointer, then puts the current PC on the top of the stack. 
         The PC is then set to nnn.
         '''
-        self.memory.stack_ptr += 1
-        self.memory.push_addr_stack(self.memory.program_counter)
+        self.memory.addr_stack.increment_stack_ptr()
+        self.memory.addr_stack.push_addr(self.memory.program_counter)
 
         location = '0x0' + self.last_three_nibbles(byte1, byte2)
         self.memory.program_counter = location

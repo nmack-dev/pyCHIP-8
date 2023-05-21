@@ -47,6 +47,7 @@ class AddrStack(MemObj):
         self.memory = []
         self.byte_width = 2
         self.size = size
+        self.stack_ptr = 0
 
     
     def push_addr(self, addr):
@@ -58,6 +59,14 @@ class AddrStack(MemObj):
     
     def pop_addr(self):
         return self.memory.pop()
+    
+
+    def get_stack_ptr(self):
+        return hex(self.stack_ptr)
+    
+
+    def increment_stack_ptr(self):
+        self.stack_ptr += 1
 
 
 class Memory:
@@ -73,8 +82,7 @@ class Memory:
 
         self.index_reg = MemObj(1, 2)
         
-        self.addr_stack = []
-        self.stack_ptr = 0
+        self.addr_stack = AddrStack(16)
 
 
     def get_pc_instruction(self):
@@ -85,8 +93,3 @@ class Memory:
         numeric_pc = int(self.program_counter, 16)
         numeric_pc += 2
         self.program_counter = hex(numeric_pc)
-
-
-    def push_addr_stack(self, addr):
-        if (len(self.addr_stack) < 16):
-            self.addr_stack.append(addr)
