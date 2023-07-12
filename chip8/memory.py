@@ -29,16 +29,17 @@ class MemObj:
         loc = int(location, 16)
         self.memory[loc] = int(val, 16)
 
-
-    @check_memory_size
-    def bit_set(self, location, bit, val):
-        if (bit > ((self.byte_width * 8) - 1)):
-            raise Exception('Can only index bits of byte from 0-7 (8 bits)')
+    # TODO: Implement bit_set, currently broken
+    # @check_memory_size
+    # def bit_set(self, location, bit, val):
+    #     if (bit > ((self.byte_width * 8) - 1)):
+    #         raise Exception('Can only index bits of byte from 0-7 (8 bits)')
         
-        loc = int(location, 16)
-        bin_val = bin(self.memory[loc])
+    #     loc = int(location, 16)
+    #     bin_val = bin(self.memory[loc])
         
-        bin_val[bit + 3] = val
+    #     bin_val = bin_val[:bit] + str(int(val, 16)) + bin_val[bit + 1:]
+    #     self.memory[loc] = int(bin_val, 2)
 
 
 class AddrStack(MemObj):
@@ -76,7 +77,7 @@ class Memory:
     def __init__(self):
         self.memory = MemObj(self.ram, 1)
         
-        self.program_counter = '0x0000'
+        self.program_counter = '0x0'
         
         self.registers = MemObj(self.registers, 1)
 
