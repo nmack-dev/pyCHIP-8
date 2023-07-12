@@ -44,8 +44,8 @@ class TestEmulator(unittest.TestCase):
 
         emu.CALL(byte1, byte2)
 
-        self.assertEqual(emu.memory.stack_ptr, 1)
-        self.assertEqual(emu.memory.addr_stack[-1], '0x0000')
+        self.assertEqual(emu.memory.addr_stack.stack_ptr, 1)
+        self.assertEqual(emu.memory.addr_stack.memory[-1], '0x0')
         self.assertEqual(emu.memory.program_counter, '0x0004')
 
 
@@ -55,14 +55,56 @@ class TestEmulator(unittest.TestCase):
         byte1 = '0x00'
         byte2 = '0x04'
 
-        emu.memory.memory[4] = '0x02'
+        emu.memory.registers.mem_set('0x4', '0x2')
         emu.SE_BYTE(byte1, byte2)
-        self.assertEqual(emu.memory.program_counter, '0x0000')
+        self.assertEqual(emu.memory.program_counter, '0x0')
 
-        emu.memory.memory[4] = '0x00'
+        emu.memory.registers.mem_set('0x4', '0x0')
         emu.SE_BYTE(byte1, byte2)
-        self.assertEqual(emu.memory.program_counter, '0x0002')
+        self.assertEqual(emu.memory.program_counter, '0x2')
 
+
+    def test_SNE(self):
+        emu = Emulator()
+
+        byte1 = '0x00'
+        byte2 = '0x04'
+
+        emu.memory.registers.mem_set('0x4', '0x2')
+        emu.SNE(byte1, byte2)
+        self.assertEqual(emu.memory.program_counter, '0x2')
+
+        emu.memory.registers.mem_set('0x4', '0x0')
+        emu.SNE(byte1, byte2)
+        self.assertEqual(emu.memory.program_counter, '0x2')
+
+    
+    def test_SE_REG(self):
+        emu = Emulator()
+
+        emu.memory.registers.mem_set('0x07', '0x2')
+        emu.memory.registers.mem_set('0x08', '0x2')
+        emu.SE_REG('0x07', '0x80')
+        self.assertEqual(emu.memory.program_counter, '0x2')
+
+
+    # def test_LD_BYTE(self):
+
+    # def test_ADD_BYTE(self):
+
+    # def test_LD_REG(self):
+
+    # def test_OR(self):
+
+    # def test_AND(self):
+
+    # def test_XOR(self):
+
+    # def test_ADD_REG(self):
+
+    # def test_SUB(self):
+
+    # def test_SHR(self):
 
 if __name__ == '__main__':
     unittest.main()

@@ -20,8 +20,12 @@ class Emulator:
 
     def decode_instr(self, byte1, byte2):
         match self.get_nibble(byte1, 1):
-            # case '0':
-            #     CLS(byte1, byte2)
+            case '0':
+                match self.get_nibble(byte2, 1):
+                    case 'E':
+                        self.CLS(byte1, byte2)
+                    case _:
+                        self.SYS(byte1, byte2)
             case '1':
                 self.JP_ADDR(byte1, byte2)
             case '2': 
@@ -91,6 +95,7 @@ class Emulator:
             #         case '6':
             #             LD_READ_LOC(byte1, byte2)
 
+    # def SYS(self, byte1, byte2):
 
     # def CLS(self, byte1, byte2):
 
@@ -127,8 +132,7 @@ class Emulator:
         '''
         second_nibble = '0x0' + self.get_nibble(byte1, 2)
 
-        x = self.memory.registers.mem_get(byte2)
-        if (self.memory.registers[second_nibble] == self.memory.registers[int(byte2, 16)]):
+        if (self.memory.registers.mem_get(second_nibble) == self.memory.registers.mem_get(byte2)):
             self.memory.increment_pc()
 
 
@@ -138,9 +142,9 @@ class Emulator:
 
         The interpreter compares register Vx to kk, and if they are not equal, increments the program counter by 2.
         '''
-        second_nibble = int('0x0' + self.get_nibble(byte1, 2), 16)
+        second_nibble = '0x0' + self.get_nibble(byte1, 2)
         
-        if (self.memory.registers[second_nibble] == self.memory.registers[int(byte2, 16)]):
+        if (self.memory.registers.mem_get(second_nibble) != self.memory.registers.mem_get(byte2)):
             self.memory.increment_pc()
 
 
@@ -150,10 +154,10 @@ class Emulator:
 
         The interpreter compares register Vx to register Vy, and if they are equal, increments the program counter by 2.
         '''
-        second_nibble = int('0x0' + self.get_nibble(byte1, 2), 16)
-        third_nibble = int('0x0' + self.get_nibble(byte2, 1), 16)
+        second_nibble = '0x0' + self.get_nibble(byte1, 2)
+        third_nibble = '0x0' + self.get_nibble(byte2, 1)
 
-        if (self.memory.registers[second_nibble] == self.memory.registers[third_nibble]):
+        if (self.memory.registers.mem_get(second_nibble) == self.memory.registers.mem_get(third_nibble)):
             self.memory.increment_pc()
 
 
