@@ -5,26 +5,6 @@ from chip8.emulator import Emulator
 
 class TestEmulator(unittest.TestCase):
 
-    def test_get_nibble(self):
-        emu = Emulator()
-        
-        byte = '0x51'
-        
-        test = emu.get_nibble(byte, 1)
-
-        self.assertEqual(emu.get_nibble(byte, 1), '5')
-        self.assertEqual(emu.get_nibble(byte, 2), '1')
-
-
-    def test_last_three_nibbles(self):
-        emu = Emulator()
-
-        byte1 = '0x51'
-        byte2 = '0xAC'
-
-        self.assertEqual(emu.last_three_nibbles(byte1, byte2), '1AC')
-
-
     def test_JP_ADDR(self):
         emu = Emulator()
 
@@ -88,19 +68,72 @@ class TestEmulator(unittest.TestCase):
         self.assertEqual(emu.memory.program_counter, '0x2')
 
 
-    # def test_LD_BYTE(self):
+    def test_LD_BYTE(self):
+        emu = Emulator()
 
-    # def test_ADD_BYTE(self):
+        emu.LD_BYTE('0x07', '0x02')
+        self.assertEqual(emu.memory.registers.mem_get('0x07'), '0x2')
 
-    # def test_LD_REG(self):
 
-    # def test_OR(self):
+    def test_ADD_BYTE(self):
+        emu = Emulator()
 
-    # def test_AND(self):
+        emu.memory.registers.mem_set('0x07', '0x2')
+        emu.ADD_BYTE('0x07', '0x02')
+        self.assertEqual(emu.memory.registers.mem_get('0x07'), '0x4')
 
-    # def test_XOR(self):
+    
+    def test_LD_REG(self):
+        emu = Emulator()
 
-    # def test_ADD_REG(self):
+        emu.memory.registers.mem_set('0x07', '0x2')
+        emu.LD_REG('0x07', '0x10')
+        self.assertEqual(emu.memory.registers.mem_get('0x07'), '0x0')
+
+
+    def test_OR(self):
+        emu = Emulator()
+
+        emu.memory.registers.mem_set('0x07', '0x2')
+        emu.memory.registers.mem_set('0x08', '0x4')
+        emu.OR('0x07', '0x80')
+        self.assertEqual(emu.memory.registers.mem_get('0x07'), '0x6')
+
+
+    def test_AND(self):
+        emu = Emulator()
+
+        emu.memory.registers.mem_set('0x07', '0x2')
+        emu.memory.registers.mem_set('0x08', '0x4')
+        emu.AND('0x07', '0x80')
+        self.assertEqual(emu.memory.registers.mem_get('0x07'), '0x0')
+
+
+    def test_XOR(self):
+        emu = Emulator()
+
+        emu.memory.registers.mem_set('0x07', '0x2')
+        emu.memory.registers.mem_set('0x08', '0x4')
+        emu.XOR('0x07', '0x80')
+        self.assertEqual(emu.memory.registers.mem_get('0x07'), '0x6')
+
+
+    def test_ADD_REG(self):
+        emu = Emulator()
+
+        # Test carry 0
+        emu.memory.registers.mem_set('0x07', '0x2')
+        emu.memory.registers.mem_set('0x08', '0x4')
+        emu.ADD_REG('0x07', '0x80')
+        self.assertEqual(emu.memory.registers.mem_get('0x07'), '0x6')
+        self.assertEqual(emu.memory.registers.mem_get('0x0F'), '0x0')
+
+        # Test carry 1
+        emu.memory.registers.mem_set('0x07', '0xFF')
+        emu.memory.registers.mem_set('0x08', '0x01')
+        emu.ADD_REG('0x07', '0x80')
+        self.assertEqual(emu.memory.registers.mem_get('0x07'), '0x0')
+        self.assertEqual(emu.memory.registers.mem_get('0x0F'), '0x1')
 
     # def test_SUB(self):
 
