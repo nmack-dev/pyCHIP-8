@@ -1,6 +1,8 @@
 from .memory import Memory
 from . import utils
 
+from random import randint
+
 class Emulator:
 
     def __init__(self):
@@ -119,7 +121,7 @@ class Emulator:
 
         The interpreter compares register Vx to kk, and if they are equal, increments the program counter by 2.
         '''
-        second_nibble = '0x0' + utils.get_nibble(byte1, 2)
+        second_nibble = utils.get_nibble_byte(byte1, 2)
 
         if (self.memory.registers.mem_get(second_nibble) == self.memory.registers.mem_get(byte2)):
             self.memory.increment_pc()
@@ -131,7 +133,7 @@ class Emulator:
 
         The interpreter compares register Vx to kk, and if they are not equal, increments the program counter by 2.
         '''
-        second_nibble = '0x0' + utils.get_nibble(byte1, 2)
+        second_nibble = utils.get_nibble_byte(byte1, 2)
         
         if (self.memory.registers.mem_get(second_nibble) != self.memory.registers.mem_get(byte2)):
             self.memory.increment_pc()
@@ -143,8 +145,8 @@ class Emulator:
 
         The interpreter compares register Vx to register Vy, and if they are equal, increments the program counter by 2.
         '''
-        second_nibble = '0x0' + utils.get_nibble(byte1, 2)
-        third_nibble = '0x0' + utils.get_nibble(byte2, 1)
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+        third_nibble = utils.get_nibble_byte(byte2, 1)
 
         if (self.memory.registers.mem_get(second_nibble) == self.memory.registers.mem_get(third_nibble)):
             self.memory.increment_pc()
@@ -156,7 +158,7 @@ class Emulator:
 
         The interpreter puts the value kk into register Vx.
         '''
-        second_nibble = '0x0' + utils.get_nibble(byte1, 2)
+        second_nibble = utils.get_nibble_byte(byte1, 2)
         self.memory.registers.mem_set(second_nibble, byte2)
 
 
@@ -166,7 +168,7 @@ class Emulator:
 
         Adds the value kk to the value of register Vx, then stores the result in Vx. 
         '''
-        second_nibble = '0x0' + utils.get_nibble(byte1, 2)
+        second_nibble = utils.get_nibble_byte(byte1, 2)
         self.memory.registers.mem_set(second_nibble, utils.add_bytes(self.memory.registers.mem_get(second_nibble), byte2))
 
 
@@ -176,8 +178,8 @@ class Emulator:
 
         Stores the value of register Vy in register Vx.
         '''
-        second_nibble = '0x0' + utils.get_nibble(byte1, 2)
-        third_nibble = '0x0' + utils.get_nibble(byte2, 1)
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+        third_nibble = utils.get_nibble_byte(byte2, 1)
 
         self.memory.registers.mem_set(second_nibble, self.memory.registers.mem_get(third_nibble))
 
@@ -188,8 +190,8 @@ class Emulator:
 
         Performs a bitwise OR on the values of Vx and Vy, then stores the result in Vx. 
         '''
-        second_nibble = '0x0' + utils.get_nibble(byte1, 2)
-        third_nibble = '0x0' + utils.get_nibble(byte2, 1)
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+        third_nibble = utils.get_nibble_byte(byte2, 1)
 
         reg1_val = self.memory.registers.mem_get(second_nibble)
         reg2_val = self.memory.registers.mem_get(third_nibble)
@@ -203,8 +205,8 @@ class Emulator:
 
         Performs a bitwise AND on the values of Vx and Vy, then stores the result in Vx.      
         '''
-        second_nibble = '0x0' + utils.get_nibble(byte1, 2)
-        third_nibble = '0x0' + utils.get_nibble(byte2, 1)
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+        third_nibble = utils.get_nibble_byte(byte2, 1)
 
         reg1_val = self.memory.registers.mem_get(second_nibble)
         reg2_val = self.memory.registers.mem_get(third_nibble)
@@ -218,8 +220,8 @@ class Emulator:
 
         Performs a bitwise exclusive OR on the values of Vx and Vy, then stores the result in Vx.
         '''
-        second_nibble = '0x0' + utils.get_nibble(byte1, 2)
-        third_nibble = '0x0' + utils.get_nibble(byte2, 1)
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+        third_nibble = utils.get_nibble_byte(byte2, 1)
 
         reg1_val = self.memory.registers.mem_get(second_nibble)
         reg2_val = self.memory.registers.mem_get(third_nibble)
@@ -235,8 +237,8 @@ class Emulator:
         If the result is greater than 8 bits (i.e., > 255,) VF is set to 1, otherwise 0. 
         Only the lowest 8 bits of the result are kept, and stored in Vx.
         '''
-        second_nibble = '0x0' + utils.get_nibble(byte1, 2)
-        third_nibble = '0x0' + utils.get_nibble(byte2, 1)
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+        third_nibble = utils.get_nibble_byte(byte2, 1)
 
         reg1_val = self.memory.registers.mem_get(second_nibble)
         reg2_val = self.memory.registers.mem_get(third_nibble)
@@ -247,17 +249,7 @@ class Emulator:
         else:
             self.memory.registers.mem_set('0x0F', '0x01')
             op_res = utils.add_bytes(reg1_val, reg2_val)
-            # TODO LOL what does this even do
-            # TODO this is a mess, is there a better way to do this?
-            setval = '0b'
-            
-            op_res_len = len(op_res)
-
-            for i in range(8):
-                setval += op_res[((op_res_len - 1) - 8) + i]
-
-            setval = hex(int(setval, 2))
-            # TODO end mess
+            setval = utils.mask_to_byte(op_res)
             self.memory.registers.mem_set(second_nibble, setval)
 
 
@@ -267,18 +259,18 @@ class Emulator:
 
         If Vx > Vy, then VF is set to 1, otherwise 0. Then Vy is subtracted from Vx, and the results stored in Vx.
         '''
-        second_nibble = int('0x0' + utils.get_nibble(byte1, 2), 16)
-        third_nibble = int('0x0' + utils.get_nibble(byte2, 1), 16)
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+        third_nibble = utils.get_nibble_byte(byte2, 1)
 
-        reg1_val = int(self.memory.registers[second_nibble], 16)
-        reg2_val = int(self.memory.registers[third_nibble], 16)
+        reg1_val = self.memory.registers.mem_get(second_nibble)
+        reg2_val = self.memory.registers.mem_get(third_nibble)
 
-        if (reg1_val > reg2_val):
-            self.memory.registers[15] = '0x01'
-            self.memory.registers[second_nibble] = hex(reg1_val - reg2_val)
+        if (int(reg1_val, 16) > int(reg2_val, 16)):
+            self.memory.registers.mem_set('0x0F', '0x01')
+            self.memory.registers.mem_set(second_nibble, utils.sub_bytes(reg1_val, reg2_val))
         else:
-            self.memory.registers[15] = '0x00'
-            self.memory.registers[second_nibble] = hex(reg1_val - reg2_val)
+            self.memory.registers.mem_set('0x0F', '0x00')
+            self.memory.registers.mem_set(second_nibble, utils.sub_bytes(reg1_val, reg2_val))
         
 
     def SHR(self, byte1, byte2):
@@ -287,32 +279,150 @@ class Emulator:
 
         If the least-significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.
         '''
-        second_nibble = int('0x0' + utils.get_nibble(byte1, 2), 16)
-        reg1_val = int(self.memory.registers[second_nibble], 16)
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+        reg1_val = self.memory.registers.mem_get(second_nibble)
 
-        self.memory.registers[second_nibble] = hex(reg1_val >> 1)
+        self.memory.registers.mem_set(second_nibble, hex(int(reg1_val, 16) >> 1))
         
-        bin_val = bin(reg1_val)
+        bin_val = bin(int(reg1_val, 16))
 
         if (bin_val[-1] == '1'):
-            self.memory.registers[15] = '0x01'
+            self.memory.registers.mem_set('0x0F', '0x01')
         else:
-            self.memory.registers[15] = '0x00'
+            self.memory.registers.mem_set('0x0F', '0x00')
 
-    # TODO: Implement
-    # def SUBN(self, byte1, byte2):
-    # def SHL(self, byte1, byte2):
-    # def SNE(self, byte1, byte2):
-    # def LD_ADDR(self, byte1, byte2): 
-    # def JP_LOC_ADDR(self, byte1, byte2):
-    # def RND(self, byte1, byte2): 
-    # def DRW(self, byte1, byte2):
-    # def SKP(self, byte1, byte2):
-    # def SKNP(self, byte1, byte2):
-    # def LD_DEL_TIMER(self, byte1, byte2):
-    # def LD_S_TIMER(self, byte1, byte2):
-    # def ADD_LOC(self, byte1, byte2):
-    # def LD_SPRITE(self, byte1, byte2):
-    # def LD_BCD(self, byte1, byte2):
-    # def LD_MEM_LOC(self, byte1, byte2):
-    # def LD_READ_LOC(self, byte1, byte2):
+
+    def SUBN(self, byte1, byte2):
+        '''
+        Set Vx = Vy - Vx, set VF = NOT borrow.
+
+        If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.
+        '''
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+        third_nibble = utils.get_nibble_byte(byte2, 1)
+
+        reg1_val = self.memory.registers.mem_get(second_nibble)
+        reg2_val = self.memory.registers.mem_get(third_nibble)
+
+        if (int(reg2_val, 16) > int(reg1_val, 16)):
+            self.memory.registers.mem_set('0x0F', '0x01')
+            self.memory.registers.mem_set(second_nibble, utils.sub_bytes(reg2_val, reg1_val))
+        else:
+            self.memory.registers.mem_set('0x0F', '0x00')
+            self.memory.registers.mem_set(second_nibble, utils.sub_bytes(reg2_val, reg1_val))
+
+
+    def SHL(self, byte1, byte2):
+        '''
+        Set Vx = Vx SHL 1.
+
+        If the most-significant bit of Vx is 1, then VF is set to 1, otherwise to 0. 
+        Then Vx is multiplied by 2.
+        '''
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+        reg1_val = self.memory.registers.mem_get(second_nibble)
+
+        self.memory.registers.mem_set(second_nibble, hex(int(reg1_val, 16) << 1))
+
+        bin_val = bin(int(reg1_val, 16))
+
+        # HACK: This is a hacky way to check the most significant bit
+        # Size of bin_val is 10 because of the '0b' prefix, so we check the 3rd index
+        if (len(bin_val) < 10):
+            self.memory.registers.mem_set('0x0F', '0x00')
+        else:
+            if (bin_val[2] == '1'):
+                self.memory.registers.mem_set('0x0F', '0x01')
+            else:
+                self.memory.registers.mem_set('0x0F', '0x00')
+
+
+    def SNE(self, byte1, byte2):
+        '''
+        Skip next instruction if Vx != Vy.
+
+        The values of Vx and Vy are compared, and if they are not equal, the program counter is increased by 2.
+        '''
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+        third_nibble = utils.get_nibble_byte(byte2, 1)
+
+        reg1_val = self.memory.registers.mem_get(second_nibble)
+        reg2_val = self.memory.registers.mem_get(third_nibble)
+
+        if (reg1_val != reg2_val):
+            # TODO make a program_counter a MemObj and use the mem_set method
+            self.memory.program_counter = utils.add_bytes(self.memory.program_counter, '0x02')
+
+
+    def LD_ADDR(self, byte1, byte2): 
+        '''
+        Set I = nnn.
+
+        The value of register I is set to nnn.
+        '''
+        two_bytes = utils.last_three_nibbles_byte(byte1, byte2)
+        self.memory.index_reg.mem_set('0x00', two_bytes)
+
+    
+    def JP_LOC_ADDR(self, byte1, byte2):
+        '''
+        Jump to location nnn + V0.
+
+        The program counter is set to nnn plus the value of V0.
+        '''
+        two_bytes = utils.last_three_nibbles_byte(byte1, byte2)
+        # TODO make a program_counter a MemObj and use the mem_set method
+        self.memory.program_counter = utils.add_bytes(two_bytes, self.memory.registers.mem_get('0x00'))
+
+    
+    def RND(self, byte1, byte2):
+        '''
+        Set Vx = random byte AND kk.
+
+        The interpreter generates a random number from 0 to 255, which is then ANDed with the value kk. 
+        The results are stored in Vx. See instruction 8xy2 for more information on AND.
+        '''
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+
+        random_byte = hex(randint(0, 255))
+        self.memory.registers.mem_set(second_nibble, utils.and_bytes(random_byte, byte2))
+
+    
+    def DRW(self, byte1, byte2):
+        pass
+
+    
+    def SKP(self, byte1, byte2):
+        pass
+
+    
+    def SKNP(self, byte1, byte2):
+        pass
+
+    
+    def LD_DEL_TIMER(self, byte1, byte2):
+        pass
+
+    
+    def LD_S_TIMER(self, byte1, byte2):
+        pass
+
+    
+    def ADD_LOC(self, byte1, byte2):
+        pass
+
+    
+    def LD_SPRITE(self, byte1, byte2):
+        pass
+
+    
+    def LD_BCD(self, byte1, byte2):
+        pass
+
+    
+    def LD_MEM_LOC(self, byte1, byte2):
+        pass
+
+    
+    def LD_READ_LOC(self, byte1, byte2):
+        pass

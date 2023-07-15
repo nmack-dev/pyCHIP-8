@@ -11,7 +11,7 @@ class MemObj:
     def check_memory_size(func):
         @functools.wraps(func)
         def wrapper(self, *args):
-            if (int(args[0], 16) <= (self.size - 1)):
+            if (int(args[0], 16) <= ((2 ** (self.byte_width * 8)) - 1)):
                 return func(self, *args)
             else:
                 raise Exception('ERROR: Out of bounds memory access')
