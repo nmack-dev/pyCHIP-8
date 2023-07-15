@@ -11,12 +11,14 @@ class MemObj:
     def check_memory_size(func):
         @functools.wraps(func)
         def wrapper(self, *args):
-            if (int(args[0], 16) <= ((2 ** (self.byte_width * 8)) - 1)):
+            if (int(args[0], 16) <= (self.size - 1)):
+            # TODO add a check input size decorator based on byte_width
+            # if (int(args[0], 16) <= ((2 ** (self.byte_width * 8)) - 1)):
                 return func(self, *args)
             else:
                 raise Exception('ERROR: Out of bounds memory access')
         return wrapper
-    
+
 
     @check_memory_size
     def mem_get(self, location):
@@ -28,18 +30,6 @@ class MemObj:
     def mem_set(self, location, val):
         loc = int(location, 16)
         self.memory[loc] = int(val, 16)
-
-    # TODO: Implement bit_set, currently broken
-    # @check_memory_size
-    # def bit_set(self, location, bit, val):
-    #     if (bit > ((self.byte_width * 8) - 1)):
-    #         raise Exception('Can only index bits of byte from 0-7 (8 bits)')
-        
-    #     loc = int(location, 16)
-    #     bin_val = bin(self.memory[loc])
-        
-    #     bin_val = bin_val[:bit] + str(int(val, 16)) + bin_val[bit + 1:]
-    #     self.memory[loc] = int(bin_val, 2)
 
 
 class AddrStack(MemObj):

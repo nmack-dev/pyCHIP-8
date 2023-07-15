@@ -1,8 +1,10 @@
 def get_nibble(byte, pos):
     return byte[pos + 1]
 
+
 def get_nibble_byte(byte, pos):
     return '0x0'+ byte[pos + 1]
+
 
 def last_three_nibbles(byte1, byte2):
     nibbles = get_nibble(byte1, 2)
@@ -11,8 +13,10 @@ def last_three_nibbles(byte1, byte2):
 
     return nibbles
 
+
 def last_three_nibbles_byte(byte1, byte2):
     return '0x0' + last_three_nibbles(byte1, byte2)
+
 
 def add_bytes(byte1, byte2):
     return hex(int(byte1, 16) + int(byte2, 16))

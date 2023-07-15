@@ -24,23 +24,6 @@ class TestMemory(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             mem.mem_set('0xFFFF', '0x1')
 
-    # TODO: Implement bit_set, currently broken
-    # def test_bit_set(self):
-    #     mem = MemObj(64, 1)
-
-    #     mem.mem_set('0x0004', '0x1')
-    #     mem.bit_set('0x0004', 0, '0x1')
-
-    #     self.assertEqual(mem.mem_get('0x0004'), '0x3')
-
-    #     # Ensures we don't access memory we don't have.
-    #     with self.assertRaises(Exception) as context:
-    #         mem.bit_set('0xFFFF', 0, '0x1')
-
-    #     # Ensures we don't access bits we don't have.
-    #     with self.assertRaises(Exception) as context:
-    #         mem.bit_set('0x0004', 8, '0x1')
-
 
 class TestAddrStack(unittest.TestCase):
 

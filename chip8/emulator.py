@@ -1,4 +1,5 @@
 from .memory import Memory
+from .display import Display
 from . import utils
 
 from random import randint
@@ -7,16 +8,17 @@ class Emulator:
 
     def __init__(self):
         self.memory = Memory()
+        self.display = Display()
 
 
     def decode_instr(self, byte1, byte2):
         match utils.get_nibble(byte1, 1):
-            case '0':
-                match utils.get_nibble(byte2, 1):
-                    case 'E':
-                        self.CLS(byte1, byte2)
-                    case _:
-                        self.SYS(byte1, byte2)
+            # case '0':
+            #     match utils.get_nibble(byte2, 1):
+            #         case 'E':
+            #             self.CLS(byte1, byte2)
+            #         case _:
+            #             self.SYS(byte1, byte2)
             case '1':
                 self.JP_ADDR(byte1, byte2)
             case '2': 
@@ -47,18 +49,18 @@ class Emulator:
                         self.SUB(byte1, byte2)
                     case '6':
                         self.SHR(byte1, byte2)
-            #         case '7':
-            #             SUBN(byte1, byte2)
-            #         case 'E':
-            #             SHL(byte1, byte2)
-            # case '9':
-            #     SNE(byte1, byte2)
-            # case 'A':
-            #     LD_ADDR(byte1, byte2) 
-            # case 'B':
-            #     JP_LOC_ADDR(byte1, byte2)
-            # case 'C':
-            #     RND(byte1, byte2) 
+                    case '7':
+                        self.SUBN(byte1, byte2)
+                    case 'E':
+                        self.SHL(byte1, byte2)
+            case '9':
+                self.SNE(byte1, byte2)
+            case 'A':
+                self.LD_ADDR(byte1, byte2) 
+            case 'B':
+                self.JP_LOC_ADDR(byte1, byte2)
+            case 'C':
+                self.RND(byte1, byte2) 
             # case 'D':
             #     DRW(byte1, byte2)
             # case 'E':
@@ -389,7 +391,28 @@ class Emulator:
 
     
     def DRW(self, byte1, byte2):
-        pass
+        '''
+        Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
+
+        The interpreter reads n bytes from memory, starting at the address stored in I. These bytes are then
+        displayed as sprites on screen at coordinates (Vx, Vy). Sprites are XORed onto the existing screen.
+        If this causes any pixels to be erased, VF is set to 1, otherwise it is set to 0. If the sprite is
+        positioned so part of it is outside the coordinates of the display, it wraps around to the opposite
+        side of the screen.
+        '''
+        x_coord = int(utils.get_nibble_byte(byte1, 2), 16)
+        y_coord = int(utils.get_nibble_byte(byte2, 1), 16)
+        num_bytes = int(utils.get_nibble_byte(byte2, 2), 16)
+
+        byte_list = []
+
+        for _ in range(num_bytes):
+            working_byte = self.memory.memory.mem_get(self.memory.index_reg.mem_get('0x00'))
+            byte_list.append(working_byte)
+            self.memory.index_reg.mem_set('0x00', utils.add_bytes(self.memory.index_reg.mem_get('0x00'), '0x01'))
+        
+        self.display.process_bytes(x_coord, y_coord, byte_list)
+        
 
     
     def SKP(self, byte1, byte2):

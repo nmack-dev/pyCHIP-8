@@ -232,6 +232,19 @@ class TestEmulator(unittest.TestCase):
         # Can't really test this (because it's random), but we can test that it's not zero
         self.assertNotEqual(emu.memory.registers.mem_get('0x01'), '0x0')
 
+    
+    def test_DRW(self):
+        emu = Emulator()
+
+        emu.memory.index_reg.mem_set('0x00', '0x00')
+        emu.memory.memory.mem_set('0x00', '0xFF')
+        emu.DRW('0x00', '0x01')
+
+        row1 = sum(emu.display.screen[0])
+
+        # 0xFF is 1111 1111, so the sum of those bits should be 8
+        self.assertEqual(row1, 8)
+
 
 if __name__ == '__main__':
     unittest.main()
