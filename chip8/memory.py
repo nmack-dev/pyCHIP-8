@@ -1,5 +1,7 @@
 import functools
 
+from .timer import Timer, SoundTimer
+
 class MemObj:
 
     def __init__(self, size, byte_width):
@@ -60,6 +62,23 @@ class AddrStack(MemObj):
         self.stack_ptr += 1
 
 
+class TimerReg(MemObj):
+    # TODO test me :D
+
+    def __init__(self, timerType) -> None:
+        super().__init__(1, 1)
+        self.timer = timerType
+    
+
+    def mem_get(self, location) -> str:
+        return hex(self.timer.current)
+    
+
+    @MemObj.check_memory_size
+    def mem_set(self, location, val) -> None:
+        self.timer.set(int(val, 16))
+
+
 class Memory:
     ram = 4096
     registers = 16
@@ -74,6 +93,10 @@ class Memory:
         self.index_reg = MemObj(1, 2)
         
         self.addr_stack = AddrStack(16)
+
+        # Empty init timers
+        self.delay_timer = TimerReg(Timer(0))
+        self.sound_timer = TimerReg(SoundTimer(0))
 
 
     def get_pc_instruction(self):

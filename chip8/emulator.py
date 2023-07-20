@@ -1,5 +1,6 @@
 from .memory import Memory
 from .display import Display
+from .keypad import Keypad
 from . import utils
 
 from random import randint
@@ -9,16 +10,13 @@ class Emulator:
     def __init__(self):
         self.memory = Memory()
         self.display = Display()
+        self.keypad = Keypad()
 
 
     def decode_instr(self, byte1, byte2):
         match utils.get_nibble(byte1, 1):
-            # case '0':
-            #     match utils.get_nibble(byte2, 1):
-            #         case 'E':
-            #             self.CLS(byte1, byte2)
-            #         case _:
-            #             self.SYS(byte1, byte2)
+            case '0':
+                self.CLS(byte1, byte2)
             case '1':
                 self.JP_ADDR(byte1, byte2)
             case '2': 
@@ -61,36 +59,42 @@ class Emulator:
                 self.JP_LOC_ADDR(byte1, byte2)
             case 'C':
                 self.RND(byte1, byte2) 
-            # case 'D':
-            #     DRW(byte1, byte2)
-            # case 'E':
-            #     match utils.get_nibble(byte2, 1):
-            #         case '9':
-            #             SKP(byte1, byte2)
-            #         case 'A':
-            #             SKNP(byte1, byte2)
-            # case 'F':
-            #     match utils.get_nibble(byte2, 1):
-            #         case '1':
-            #             match get_nibble(byte2, 2):
-            #                 case '5':
-            #                     LD_DEL_TIMER(byte1, byte2)
-            #                 case '8':
-            #                     LD_S_TIMER(byte1, byte2)
-            #                 case 'E':
-            #                     ADD_LOC(byte1, byte2)
-            #         case '2':
-            #             LD_SPRITE(byte1, byte2)
-            #         case '3':
-            #             LD_BCD(byte1, byte2)
-            #         case '5':
-            #             LD_MEM_LOC(byte1, byte2)
-            #         case '6':
-            #             LD_READ_LOC(byte1, byte2)
+            case 'D':
+                self.DRW(byte1, byte2)
+            case 'E':
+                match utils.get_nibble(byte2, 1):
+                    case '9':
+                        self.SKP(byte1, byte2)
+                    case 'A':
+                        self.SKNP(byte1, byte2)
+            case 'F':
+                match utils.get_nibble(byte2, 1):
+                    case '0':
+                        match utils.get_nibble(byte2, 2):
+                            case '7':
+                                self.LD_REG_DEL_TIMER(byte1, byte2)
+                            case 'A':
+                                self.LD_KEY(byte1, byte2)
+                    case '1':
+                        match utils.get_nibble(byte2, 2):
+                            case '5':
+                                self.LD_DEL_TIMER(byte1, byte2)
+                            case '8':
+                                self.LD_S_TIMER(byte1, byte2)
+                            case 'E':
+                                self.ADD_LOC(byte1, byte2)
+                    case '2':
+                        self.LD_SPRITE(byte1, byte2)
+                    case '3':
+                        self.LD_BCD(byte1, byte2)
+                    case '5':
+                        self.LD_MEM_LOC(byte1, byte2)
+                    case '6':
+                        self.LD_READ_LOC(byte1, byte2)
 
-    # def SYS(self, byte1, byte2):
 
-    # def CLS(self, byte1, byte2):
+    def CLS(self, byte1, byte2):
+        pass
 
 
     def JP_ADDR(self, byte1, byte2):
@@ -391,6 +395,7 @@ class Emulator:
 
     
     def DRW(self, byte1, byte2):
+        # TODO: this is wrong, fix
         '''
         Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
 
@@ -414,13 +419,58 @@ class Emulator:
         self.display.process_bytes(x_coord, y_coord, byte_list)
         
 
-    
     def SKP(self, byte1, byte2):
-        pass
+        '''
+        Skip next instruction if key with the value of Vx is pressed.
+
+        Checks the keyboard, and if the key corresponding to the value of Vx is currently in the down position,
+        PC is increased by 2.
+        '''
+        key = int(utils.get_nibble_byte(byte1, 2), 16)
+
+        if self.keypad.is_pressed(key):
+            # TODO make a program_counter a MemObj and use the mem_set method
+            # TODO add default value of 0x00 for MemObj
+            self.memory.program_counter = utils.add_bytes(self.memory.program_counter, '0x02')
 
     
     def SKNP(self, byte1, byte2):
-        pass
+        '''
+        Skip next instruction if key with the value of Vx is not pressed.
+
+        Checks the keyboard, and if the key corresponding to the value of Vx is currently in the up position,
+        PC is increased by 2.
+        '''
+        key = int(utils.get_nibble_byte(byte1, 2), 16)
+
+        if not self.keypad.is_pressed(key):
+            # TODO make a program_counter a MemObj and use the mem_set method
+            # TODO add default value of 0x00 for MemObj
+            self.memory.program_counter = utils.add_bytes(self.memory.program_counter, '0x02')
+
+
+    def LD_REG_DEL_TIMER(self, byte1, byte2):
+        '''
+        Set Vx = delay timer value.
+
+        The value of DT is placed into Vx.
+        '''
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+
+        self.memory.registers.mem_set(second_nibble, self.memory.delay_timer.mem_get('0x00'))
+
+
+    def LD_KEY(self, byte1, byte2):
+        '''
+        Wait for a key press, store the value of the key in Vx.
+
+        All execution stops until a key is pressed, then the value of that key is stored in Vx.
+        '''
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+
+        
+
+        self.memory.registers.mem_set(second_nibble, self.keypad.wait_for_key())
 
     
     def LD_DEL_TIMER(self, byte1, byte2):

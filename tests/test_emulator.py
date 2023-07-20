@@ -1,4 +1,6 @@
 import unittest
+import keyboard
+import time
 
 from chip8.memory import Memory
 from chip8.emulator import Emulator
@@ -244,6 +246,61 @@ class TestEmulator(unittest.TestCase):
 
         # 0xFF is 1111 1111, so the sum of those bits should be 8
         self.assertEqual(row1, 8)
+
+
+    def test_SKP(self):
+        emu = Emulator()
+
+        emu.SKP('0x01', '0x00')
+        self.assertEqual(emu.memory.program_counter, '0x0')
+        
+        keyboard.press(2)
+        time.sleep(0.05)
+        
+        emu.SKP('0x01', '0x00')
+        
+        keyboard.release(2)
+        
+        self.assertEqual(emu.memory.program_counter, '0x2')
+        
+
+    def test_SKNP(self):
+        emu = Emulator()
+
+        emu.SKNP('0x02', '0x00')
+        self.assertEqual(emu.memory.program_counter, '0x2')
+        
+        keyboard.press(3)
+        time.sleep(0.05)
+        
+        emu.SKNP('0x02', '0x00')
+        
+        keyboard.release(3)
+        
+        self.assertEqual(emu.memory.program_counter, '0x2')
+
+
+    def test_LD_REG_DEL_TIMER(self):
+        emu = Emulator()
+
+        emu.memory.delay_timer.mem_set('0x00', '0x0F')
+        emu.LD_REG_DEL_TIMER('0x00', '0x00')
+        self.assertEqual(emu.memory.registers.mem_get('0x00'), '0xf')
+
+    
+    def test_LD_KEY(self):
+        emu = Emulator()
+
+        keyboard.press(4)
+        
+        emu.LD_KEY('0x00', '0x00')
+        self.assertEqual(False, emu.memory.delay_timer.timer.running)
+        
+        time.sleep(0.05)
+        keyboard.release(4)
+        
+        self.assertEqual(True, emu.memory.delay_timer.timer.running)
+        self.assertEqual(emu.memory.registers.mem_get('0x00'), '0x4')
 
 
 if __name__ == '__main__':
