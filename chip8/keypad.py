@@ -20,16 +20,20 @@ class Keypad:
     
 
     def poll_all_keys(self) -> int:
-        for key in self.layout:
+        for key in self.layout.keys():
             if (keyboard.is_pressed(self.layout.get(key))):
                 return key
         
         return -1
     
 
-    def wait_for_key(self) -> bool:
-        while (self.poll_all_keys() == -1):
+    def wait_for_key(self) -> int:
+        key_status = -1
+        while (key_status == -1):
+            key_status = self.poll_all_keys()
             # TODO: This should block EVERYTHING else
             #       until a key is pressed. Figure out
             #       correct sleep value.
             time.sleep(0.05)
+        
+        return key_status

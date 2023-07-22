@@ -8,6 +8,7 @@ class Timer:
         self.current = start
         self.running = False
         self.thread = threading.Thread(target=self.timer_task)
+        # TODO remove because not needed???
         self.lock = threading.Lock()
     
 
@@ -38,6 +39,14 @@ class Timer:
     def reset(self) -> None:
         self.running = False
         self.current = self.start_time
+
+
+    def stop(self) -> None:
+        self.running = False
+
+    
+    def resume(self) -> None:
+        self.running = True
 
 
 class SoundTimer(Timer):

@@ -33,6 +33,20 @@ class TestTimer(unittest.TestCase):
         del_timer.reset()
         self.assertEqual(del_timer.current, 10)
 
+    
+    def test_stop(self):
+        del_timer = Timer(10)
+
+        del_timer.stop()
+        self.assertEqual(del_timer.running, False)
+
+    
+    def test_resume(self):
+        del_timer = Timer(10)
+
+        del_timer.resume()
+        self.assertEqual(del_timer.running, True)
+
 
 if __name__ == '__main__':
     unittest.main()

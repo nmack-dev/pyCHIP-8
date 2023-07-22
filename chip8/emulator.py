@@ -94,7 +94,10 @@ class Emulator:
 
 
     def CLS(self, byte1, byte2):
-        pass
+        '''
+        Clear the display.
+        '''
+        self.display.clear_screen()
 
 
     def JP_ADDR(self, byte1, byte2):
@@ -426,7 +429,8 @@ class Emulator:
         Checks the keyboard, and if the key corresponding to the value of Vx is currently in the down position,
         PC is increased by 2.
         '''
-        key = int(utils.get_nibble_byte(byte1, 2), 16)
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+        key = int(self.memory.registers.mem_get(second_nibble), 16)
 
         if self.keypad.is_pressed(key):
             # TODO make a program_counter a MemObj and use the mem_set method
@@ -441,7 +445,8 @@ class Emulator:
         Checks the keyboard, and if the key corresponding to the value of Vx is currently in the up position,
         PC is increased by 2.
         '''
-        key = int(utils.get_nibble_byte(byte1, 2), 16)
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+        key = int(self.memory.registers.mem_get(second_nibble), 16)
 
         if not self.keypad.is_pressed(key):
             # TODO make a program_counter a MemObj and use the mem_set method
@@ -468,34 +473,103 @@ class Emulator:
         '''
         second_nibble = utils.get_nibble_byte(byte1, 2)
 
-        
+        self.memory.delay_timer.timer.stop()
 
         self.memory.registers.mem_set(second_nibble, self.keypad.wait_for_key())
 
+        self.memory.delay_timer.timer.resume()
+
     
     def LD_DEL_TIMER(self, byte1, byte2):
-        pass
+        '''
+        Set delay timer = Vx.
+
+        DT is set equal to the value of Vx.
+        '''
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+        val = self.memory.registers.mem_get(second_nibble)
+
+        self.memory.load_delay_timer(val)
 
     
     def LD_S_TIMER(self, byte1, byte2):
-        pass
+        '''
+        Set sound timer = Vx.
+
+        ST is set equal to the value of Vx.
+        '''
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+        val = self.memory.registers.mem_get(second_nibble)
+
+        self.memory.load_sound_timer(val)
 
     
     def ADD_LOC(self, byte1, byte2):
-        pass
+        '''
+        Set I = I + Vx.
+
+        The values of I and Vx are added, and the results are stored in I.
+        '''
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+
+        self.memory.add_to_index_reg(second_nibble)
 
     
     def LD_SPRITE(self, byte1, byte2):
-        pass
+        '''
+        Set I = location of sprite for digit Vx.
+
+        The value of I is set to the location for the hexadecimal sprite corresponding to the value of Vx.
+        '''
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+
+        self.memory.load_sprite(second_nibble)
 
     
     def LD_BCD(self, byte1, byte2):
-        pass
+        '''
+        Store BCD representation of Vx in memory locations I, I+1, and I+2.
+
+        The interpreter takes the decimal value of Vx, and places the hundreds digit in memory at location in I,
+        the tens digit at location I+1, and the ones digit at location I+2.
+        '''
+        second_nibble = utils.get_nibble_byte(byte1, 2)
+
+        val = str(int(self.memory.registers.mem_get(second_nibble), 16))
+
+        # TODO this is awful but it probably works
+        mem_loc = self.memory.index_reg.mem_get('0x00')
+
+        for digit in val:
+            self.memory.memory.mem_set(mem_loc, digit)
+            mem_loc = utils.add_bytes(mem_loc, '0x01')
 
     
     def LD_MEM_LOC(self, byte1, byte2):
-        pass
+        '''
+        Store registers V0 through Vx in memory starting at location I.
+
+        The interpreter copies the values of registers V0 through Vx into memory, starting at the address in I.
+        '''
+        second_nibble = int(utils.get_nibble_byte(byte1, 2), 16)
+
+        mem_loc = self.memory.index_reg.mem_get('0x00')
+
+        for i in range(second_nibble + 1):
+            self.memory.memory.mem_set(mem_loc, self.memory.registers.mem_get(hex(i)))
+            mem_loc = utils.add_bytes(mem_loc, '0x01')
 
     
     def LD_READ_LOC(self, byte1, byte2):
-        pass
+        '''
+        Read registers V0 through Vx from memory starting at location I.
+
+        The interpreter reads values from memory starting at location I into registers V0 through Vx.
+        '''
+        second_nibble = int(utils.get_nibble_byte(byte1, 2), 16)
+
+        mem_loc = self.memory.index_reg.mem_get('0x00')
+
+        for i in range(second_nibble + 1):
+            mem_val = self.memory.memory.mem_get(mem_loc)
+            self.memory.registers.mem_set(hex(i), mem_val)

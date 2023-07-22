@@ -1,6 +1,10 @@
 import functools
 
+from . import font
+from . import utils
 from .timer import Timer, SoundTimer
+
+
 
 class MemObj:
 
@@ -83,6 +87,8 @@ class Memory:
     ram = 4096
     registers = 16
 
+    font_start = '0x50'
+
     def __init__(self):
         self.memory = MemObj(self.ram, 1)
         
@@ -98,6 +104,14 @@ class Memory:
         self.delay_timer = TimerReg(Timer(0))
         self.sound_timer = TimerReg(SoundTimer(0))
 
+        # Load font into memory
+        self.load_font()
+
+    
+    def load_font(self):
+        for i in range(len(font.fontset)):
+            self.memory.mem_set(hex(int(self.font_start, 16) + i), font.fontset[i])
+
 
     def get_pc_instruction(self):
         return self.memory.mem_get(self.program_counter)
@@ -107,3 +121,24 @@ class Memory:
         numeric_pc = int(self.program_counter, 16)
         numeric_pc += 2
         self.program_counter = hex(numeric_pc)
+
+    
+    # TODO test me :D
+    def load_delay_timer(self, reg):
+        self.registers.mem_set(reg, self.delay_timer.mem_get('0x00'))
+
+
+    def load_sound_timer(self, reg):
+        self.registers.mem_set(reg, self.sound_timer.mem_get('0x00'))
+
+
+    def add_to_index_reg(self, reg):
+        index_val = self.index_reg.mem_get('0x00')
+        reg_val = self.registers.mem_get(reg)
+
+        self.index_reg.mem_set('0x00', utils.add_bytes(index_val, reg_val))
+
+    
+    def load_sprite(self, loc):
+        reg_val = self.registers.mem_get(loc)
+        self.index_reg.mem_set('0x00', utils.add_bytes(self.font_start, reg_val))
