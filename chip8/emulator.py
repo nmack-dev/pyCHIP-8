@@ -1,6 +1,7 @@
 from .memory import Memory
 from .display import Display
 from .keypad import Keypad
+from .emulator_ui import EmulatorUI
 from . import utils
 
 from random import randint
@@ -9,8 +10,32 @@ class Emulator:
 
     def __init__(self):
         self.memory = Memory()
-        self.display = Display()
+        self.emulator_ui = EmulatorUI()
+        self.display = Display(self.emulator_ui)
         self.keypad = Keypad()
+
+    
+    def load_rom(self, rom_path):
+        '''
+        Load a ROM into memory.
+        '''
+        self.memory.load_rom(rom_path)
+
+    
+    def run(self):
+        '''
+        Run the emulator.
+        '''
+        self.memory.program_counter = '0x200'
+        
+        while True:
+            if int(self.memory.program_counter, 16) < self.memory.ram - 1:
+                self.emulator_ui.root.update()
+
+                byte1 = self.memory.memory.mem_get(self.memory.program_counter)
+                byte2 = self.memory.memory.mem_get(utils.add_bytes(self.memory.program_counter, '0x1'))
+                self.decode_instr(byte1, byte2)
+                self.memory.increment_pc()
 
 
     def decode_instr(self, byte1, byte2):
@@ -49,31 +74,31 @@ class Emulator:
                         self.SHR(byte1, byte2)
                     case '7':
                         self.SUBN(byte1, byte2)
-                    case 'E':
+                    case 'e':
                         self.SHL(byte1, byte2)
             case '9':
                 self.SNE(byte1, byte2)
-            case 'A':
+            case 'a':
                 self.LD_ADDR(byte1, byte2) 
-            case 'B':
+            case 'b':
                 self.JP_LOC_ADDR(byte1, byte2)
-            case 'C':
+            case 'c':
                 self.RND(byte1, byte2) 
-            case 'D':
+            case 'd':
                 self.DRW(byte1, byte2)
-            case 'E':
+            case 'e':
                 match utils.get_nibble(byte2, 1):
                     case '9':
                         self.SKP(byte1, byte2)
-                    case 'A':
+                    case 'a':
                         self.SKNP(byte1, byte2)
-            case 'F':
+            case 'f':
                 match utils.get_nibble(byte2, 1):
                     case '0':
                         match utils.get_nibble(byte2, 2):
                             case '7':
                                 self.LD_REG_DEL_TIMER(byte1, byte2)
-                            case 'A':
+                            case 'a':
                                 self.LD_KEY(byte1, byte2)
                     case '1':
                         match utils.get_nibble(byte2, 2):
@@ -81,7 +106,7 @@ class Emulator:
                                 self.LD_DEL_TIMER(byte1, byte2)
                             case '8':
                                 self.LD_S_TIMER(byte1, byte2)
-                            case 'E':
+                            case 'e':
                                 self.ADD_LOC(byte1, byte2)
                     case '2':
                         self.LD_SPRITE(byte1, byte2)
@@ -408,9 +433,11 @@ class Emulator:
         positioned so part of it is outside the coordinates of the display, it wraps around to the opposite
         side of the screen.
         '''
-        x_coord = int(utils.get_nibble_byte(byte1, 2), 16)
-        y_coord = int(utils.get_nibble_byte(byte2, 1), 16)
+        x_coord = int(self.memory.registers.mem_get(utils.get_nibble_byte(byte1, 2)), 16) % 64
+        y_coord = int(self.memory.registers.mem_get(utils.get_nibble_byte(byte2, 1)), 16) % 32
         num_bytes = int(utils.get_nibble_byte(byte2, 2), 16)
+
+        self.memory.registers.mem_set('0x0F', '0x00')
 
         byte_list = []
 

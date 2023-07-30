@@ -1,4 +1,7 @@
 def get_nibble(byte, pos):
+    if (len(byte) <= 3):
+        byte = '0x0' + byte[2]
+
     return byte[pos + 1]
 
 
@@ -16,6 +19,15 @@ def last_three_nibbles(byte1, byte2):
 
 def last_three_nibbles_byte(byte1, byte2):
     return '0x0' + last_three_nibbles(byte1, byte2)
+
+
+def get_byte_bin(byte):
+    byte_bin = bin(int(byte, 16))[2:]
+
+    if len(byte_bin) < 8:
+        byte_bin = '0' * (8 - len(byte_bin)) + byte_bin
+
+    return byte_bin
 
 
 def add_bytes(byte1, byte2):

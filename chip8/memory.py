@@ -104,8 +104,24 @@ class Memory:
         self.delay_timer = TimerReg(Timer(0))
         self.sound_timer = TimerReg(SoundTimer(0))
 
+        self.rom = []
+
         # Load font into memory
         self.load_font()
+
+
+    def load_rom(self, rom):
+        '''
+        Load a rom into memory starting at 0x200.
+        '''
+        with open(rom, mode='rb') as binary:
+            numerical_rom = list(binary.read())
+            start = '0x200'
+            for byte in numerical_rom:
+                hex_byte = hex(byte)
+                self.memory.mem_set(start, hex_byte)
+                self.rom.append(hex_byte)
+                start = utils.add_bytes(start, '0x1')
 
     
     def load_font(self):

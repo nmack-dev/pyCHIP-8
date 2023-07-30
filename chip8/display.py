@@ -1,10 +1,13 @@
+from . import utils
+
 class Display:
     width = 64
     height = 32
 
-    def __init__(self):
+    def __init__(self, emulator_ui=None):
         # 64 x 32 display
         self.screen = [[0 for i in range(self.width)] for j in range(self.height)]
+        self.emulator_ui = emulator_ui
     
 
     def draw_pixel(self, x, y, val):
@@ -13,25 +16,18 @@ class Display:
 
         Returns 1 if a pixel was erased, 0 otherwise.
         '''
-        # TODO don't need to do this anymore
-        # x_adj = x
-        # y_adj = y
-
-        # # wrap around if x or y is out of bounds
-        # while (x_adj > (self.width - 1)):
-        #     x_adj -= self.width
-        
-        # while (y_adj > (self.height - 1)):
-        #     y_adj -= self.height
-
         screen_val = self.screen[y][x]
 
         # XOR the value with the screen value
         if (screen_val ^ val):
             self.screen[y][x] = 1
+            if self.emulator_ui:
+                self.emulator_ui.draw_pixel(x, y, 1)
             return 0
         else:
             self.screen[y][x] = 0
+            if self.emulator_ui:
+                self.emulator_ui.draw_pixel(x, y, 0)
             return 1
     
 
@@ -45,15 +41,17 @@ class Display:
         pixel_erased = 0
 
         for byte in byte_list:
-            byte_bin = bin(int(byte, 16))[2:]
+            byte_bin = utils.get_byte_bin(byte)
 
-            for bit in byte_bin:
-                if x > (self.width - 1):
-                    x = 0
-                    y += 1
-                
-                pixel_erased += self.draw_pixel(x, y, int(bit))
-                x += 1
+            if y < self.height:
+                for bit in byte_bin:
+                    if x < self.width:
+                        pixel_erased += self.draw_pixel(x, y, int(bit))
+                        x += 1
+                x = x_init
+                y += 1
+            else:
+                break
         
         return pixel_erased
     

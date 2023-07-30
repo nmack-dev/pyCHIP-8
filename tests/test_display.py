@@ -10,11 +10,6 @@ class TestDisplay(unittest.TestCase):
         self.assertEqual(display.draw_pixel(0, 0, 1), 0)
         self.assertEqual(display.draw_pixel(0, 0, 1), 1)
 
-        # TODO don't need to do this anymore
-        # # Roll over condition test
-        # self.assertEqual(display.draw_pixel(5001, 5001, 1), 0)
-        # self.assertEqual(display.draw_pixel(5001, 5001, 1), 1)
-
 
     def test_process_bytes(self):
         display = Display()
@@ -32,10 +27,21 @@ class TestDisplay(unittest.TestCase):
         # Test drawing two bytes
         self.assertEqual(display.process_bytes(0, 0, ['0xFF', '0xFF']), 0)
 
-        for _ in range(16):
+        for _ in range(8):
             self.assertEqual(display.screen[0][_], 1)
+            self.assertEqual(display.screen[1][_], 1)
 
         self.assertEqual(display.screen[0][16], 0)
+
+        display.clear_screen()
+
+        # Test NOT rolling over to the next line
+        self.assertEqual(display.process_bytes(60, 0, ['0xFF']), 0)
+
+        for _ in range(60, 64):
+            self.assertEqual(display.screen[0][_], 1)
+
+        self.assertEqual(display.screen[0][1], 0)
         
 
 if __name__ == '__main__':
