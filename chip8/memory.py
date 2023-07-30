@@ -65,6 +65,10 @@ class AddrStack(MemObj):
     def increment_stack_ptr(self):
         self.stack_ptr += 1
 
+    
+    def decrement_stack_ptr(self):
+        self.stack_ptr -= 1
+
 
 class TimerReg(MemObj):
     # TODO test me :D

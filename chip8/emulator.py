@@ -41,7 +41,11 @@ class Emulator:
     def decode_instr(self, byte1, byte2):
         match utils.get_nibble(byte1, 1):
             case '0':
-                self.CLS(byte1, byte2)
+                match utils.get_nibble(byte2, 2):
+                    case 'e':
+                        self.RET(byte1, byte2)
+                    case _:
+                        self.CLS(byte1, byte2)
             case '1':
                 self.JP_ADDR(byte1, byte2)
             case '2': 
@@ -77,7 +81,7 @@ class Emulator:
                     case 'e':
                         self.SHL(byte1, byte2)
             case '9':
-                self.SNE(byte1, byte2)
+                self.SNE_REG(byte1, byte2)
             case 'a':
                 self.LD_ADDR(byte1, byte2) 
             case 'b':
@@ -118,6 +122,17 @@ class Emulator:
                         self.LD_READ_LOC(byte1, byte2)
 
 
+    def RET(self, byte1, byte2):
+        '''
+        Return from a subroutine.
+
+        The interpreter sets the program counter to the address at the top of the stack, 
+        then subtracts 1 from the stack pointer.
+        '''
+        self.memory.program_counter = self.memory.addr_stack.pop_addr()
+        self.memory.addr_stack.decrement_stack_ptr()
+
+
     def CLS(self, byte1, byte2):
         '''
         Clear the display.
@@ -126,6 +141,7 @@ class Emulator:
 
 
     def JP_ADDR(self, byte1, byte2):
+
         '''
         Jump to location nnn.
 
@@ -138,6 +154,7 @@ class Emulator:
     def CALL(self, byte1, byte2):
         '''
         Call subroutine at nnn.
+
 
         The interpreter increments the stack pointer, then puts the current PC on the top of the stack. 
         The PC is then set to nnn.
@@ -157,7 +174,7 @@ class Emulator:
         '''
         second_nibble = utils.get_nibble_byte(byte1, 2)
 
-        if (self.memory.registers.mem_get(second_nibble) == self.memory.registers.mem_get(byte2)):
+        if (utils.byte_equals(self.memory.registers.mem_get(second_nibble), byte2)):
             self.memory.increment_pc()
 
 
@@ -168,8 +185,8 @@ class Emulator:
         The interpreter compares register Vx to kk, and if they are not equal, increments the program counter by 2.
         '''
         second_nibble = utils.get_nibble_byte(byte1, 2)
-        
-        if (self.memory.registers.mem_get(second_nibble) != self.memory.registers.mem_get(byte2)):
+
+        if (not utils.byte_equals(self.memory.registers.mem_get(second_nibble), byte2)):
             self.memory.increment_pc()
 
 
@@ -203,7 +220,13 @@ class Emulator:
         Adds the value kk to the value of register Vx, then stores the result in Vx. 
         '''
         second_nibble = utils.get_nibble_byte(byte1, 2)
-        self.memory.registers.mem_set(second_nibble, utils.add_bytes(self.memory.registers.mem_get(second_nibble), byte2))
+
+        result = utils.add_bytes(self.memory.registers.mem_get(second_nibble), byte2)
+
+        if (int(result, 16) > 255):
+            result = hex(int(result, 16) - 256)
+
+        self.memory.registers.mem_set(second_nibble, result)
 
 
     def LD_REG(self, byte1, byte2):
@@ -360,18 +383,13 @@ class Emulator:
 
         bin_val = bin(int(reg1_val, 16))
 
-        # HACK: This is a hacky way to check the most significant bit
-        # Size of bin_val is 10 because of the '0b' prefix, so we check the 3rd index
-        if (len(bin_val) < 10):
-            self.memory.registers.mem_set('0x0F', '0x00')
+        if (bin_val[2] == '1'):
+            self.memory.registers.mem_set('0x0F', '0x01')
         else:
-            if (bin_val[2] == '1'):
-                self.memory.registers.mem_set('0x0F', '0x01')
-            else:
-                self.memory.registers.mem_set('0x0F', '0x00')
+            self.memory.registers.mem_set('0x0F', '0x00')
 
 
-    def SNE(self, byte1, byte2):
+    def SNE_REG(self, byte1, byte2):
         '''
         Skip next instruction if Vx != Vy.
 
@@ -383,9 +401,8 @@ class Emulator:
         reg1_val = self.memory.registers.mem_get(second_nibble)
         reg2_val = self.memory.registers.mem_get(third_nibble)
 
-        if (reg1_val != reg2_val):
-            # TODO make a program_counter a MemObj and use the mem_set method
-            self.memory.program_counter = utils.add_bytes(self.memory.program_counter, '0x02')
+        if (not utils.byte_equals(reg1_val, reg2_val)):
+            self.memory.increment_pc()
 
 
     def LD_ADDR(self, byte1, byte2): 
